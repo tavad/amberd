@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Check if directory argument is provided
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <directory_path>"
+    exit 1
+fi
+
+DIR_PATH=$(realpath "$1")
+OUTPUT_FILE="directory_analysis_$(date +%Y%m%d_%H%M%S).md"
+
+# Function to get file type
+get_file_type() {
+    file --brief "$1"
+}
+
+# Function to format size
+format_size() {
+    numfmt --to=iec-i --suffix=B "$1"
+}
+
+# Function to get git info if available
+get_git_info() {
+    if git -C "$1" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Git repository information:"
+        echo "  Branch: $(git -C "$1" branch --show-current)"
+        echo "  Last commit: $(git -C "$1" log -1 --format=%H)"
+        echo "  Last commit date: $(git -C "$1" log -1 --format=%cd)"
+    else
+        echo "Not a git repository"
+    fi
+}
+
+# Generate YAML header
+{
+    echo "---"
+    echo "folder_info:"
+    echo "  path: $DIR_PATH"
+    echo "  total_size: $(format_size $(du -sb "$DIR_PATH" | cut -f1))"
+    echo "  number_of_files: $(find "$DIR_PATH" -type f | wc -l)"
+    echo "  number_of_directories: $(find "$DIR_PATH" -type d | wc -l)"
+    echo "  last_modified: $(stat -c %y "$DIR_PATH")"
+    echo "  permissions: $(stat -c %A "$DIR_PATH")"
+    echo "  owner: $(stat -c %U "$DIR_PATH")"
+    echo "  group: $(stat -c %G "$DIR_PATH")"
+    echo "git_info:"
+    get_git_info "$DIR_PATH" | sed 's/^/  /'
+    echo "analysis_date: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "---"
+    echo
+    echo "# Directory Tree"
+    echo '```'
+    tree -a "$DIR_PATH"
+    echo '```'
+    echo
+    echo "# File Contents Analysis"
+    echo
+} > "$OUTPUT_FILE"
+
+# Process each file
+find "$DIR_PATH" -type f | while read -r file; do
+    relative_path=${file#$DIR_PATH/}
+    file_size=$(stat -f %z "$file")
+    file_type=$(get_file_type "$file")
+
+    {
+        echo "## $relative_path"
+        echo "- Size: $(format_size $file_size)"
+        echo "- Type: $file_type"
+        echo "- Last modified: $(stat -c %y "$file")"
+        echo
+
+        # Process file based on type and size
+        if [[ $file_type == *"text"* ]] || [[ $file_type == *"ASCII"* ]]; then
+            if [ $file_size -gt 5120 ]; then # 5KB
+                echo "First 50 lines of file:"
+                echo '```'
+                head -n 50 "$file"
+                echo '```'
+            else
+                echo "File contents:"
+                echo '```'
+                cat "$file"
+                echo '```'
+            fi
+        elif [[ $file_type == *"CSV"* ]] || [[ ${file,,} == *.csv ]]; then
+            echo "CSV file header:"
+            echo '```'
+            head -n 5 "$file"
+            echo '```'
+        elif [[ $file_type == *"JSON"* ]] || [[ ${file,,} == *.json ]]; then
+            echo "JSON structure preview:"
+            echo '```json'
+            jq -C '.' "$file" | head -n 20
+            echo '```'
+        else
+            echo "Binary or non-text file - content preview not available"
+            if command -v file >/dev/null 2>&1; then
+                echo "Additional file details: $(file -b "$file")"
+            fi
+        fi
+        echo
+    } >> "$OUTPUT_FILE"
+done
+
+# Add system information
+{
+    echo "# System Information"
+    echo "- OS: $(uname -s)"
+    echo "- OS Version: $(uname -r)"
+    echo "- Machine: $(uname -m)"
+    if [ -f /etc/os-release ]; then
+        echo "- Distribution: $(source /etc/os-release && echo $PRETTY_NAME)"
+    fi
+    echo
+} >> "$OUTPUT_FILE"
+
+echo "Analysis complete. Output written to $OUTPUT_FILE"

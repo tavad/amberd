@@ -1,0 +1,22 @@
+{{ if eq .Page.Language.Lang "hy" }}
+<div class="citation">
+  <p>Եթե հնարավոր է, խնդրում եմ այս նյութը ուղարկել նաև այն մարդկանց, ում այն կարծում եք կարող է հետաքրքրել:</p>
+  <p><strong>ԱՅՍ ՀՈԴՎԱԾԻ ՀՂՈՒՄԸ</strong></p>
+  <p><em><strong>{{ .Page.Params.author }} ({{ .Page.Date.Format "2006" }}) {{ .Page.Title }}, tvyal.com հարթակ, {{ .Page.Date.Format "02-01-2006" }}․ {{ .Page.Permalink }}</strong></em></p>
+  <p><strong>Արգելվում է այս հարթակի նյութերը արտատպել առանց հղում կատարելու։</strong></p>
+</div>
+{{ else if eq .Page.Language.Lang "en" }}
+<div class="citation">
+  <p>If possible, please share this material with others who might find it interesting.</p>
+  <p><strong>ARTICLE CITATION</strong></p>
+  <p><em><strong>{{ .Page.Params.author }} ({{ .Page.Date.Format "2006" }}) {{ .Page.Title }}, tvyal.com platform, {{ .Page.Date.Format "02-01-2006" }}. {{ .Page.Permalink }}</strong></em></p>
+  <p><strong>Reproduction of materials from this platform without proper citation is prohibited.</strong></p>
+</div>
+{{ else }}
+<div class="citation">
+  <p>Если возможно, пожалуйста, поделитесь этим материалом с теми, кому он может быть интересен.</p>
+  <p><strong>ССЫЛКА НА СТАТЬЮ</strong></p>
+  <p><em><strong>{{ .Page.Params.author }} ({{ .Page.Date.Format "2006" }}) {{ .Page.Title }}, платформа tvyal.com, {{ .Page.Date.Format "02-01-2006" }}. {{ .Page.Permalink }}</strong></em></p>
+  <p><strong>Запрещается воспроизведение материалов с данной платформы без указания ссылки.</strong></p>
+</div>
+{{ end }}

@@ -1,0 +1,20 @@
+/*
+
+Add styles or override variables from the theme here.
+
+*/
+
+$primary: #AC1C21;  // Change to your desired color
+$menu-primary: $primary;
+
+// Box (section) colors
+
+.td-box--2 {
+    background-color: #C09246 !important;
+    color: #fff !important;
+}
+
+.td-box--3 {
+    background-color: #8D7F7A !important;
+    color: #fff !important;
+}
