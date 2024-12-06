@@ -5,3 +5,7 @@ package-lock.json
 .hugo_build.lockpublic/
 resources/
 .hugo_build.lock
+public/
+resources/
+.hugo_build.lock
+node_modules/
